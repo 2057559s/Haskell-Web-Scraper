@@ -7,12 +7,15 @@ import Control.Monad
 import Control.Applicative
 main :: IO()
 main = do
-    links <- getLinks "http://www.gla.ac.uk//schools/computing/staff"
+    links <- getLinks mainUrl
     details <- return (fmap (mapM getDetails) links)
     sequence_ details
-    print links
 
+mainUrl :: String
+mainUrl = "http://www.gla.ac.uk/schools/computing/staff"
 
+staffUrl :: String
+staffUrl = "schools/computing/staff"
 
 --Function for scraping the main link
 getLinks :: String -> IO (Maybe [String])
@@ -25,17 +28,24 @@ getDetails a = scrapeURL a scrapeDetails
 
 scrapeDetails :: Scraper String [String]
 scrapeDetails =  
-    chroots "h1" $ do
-        name <- text anySelector
-        let n = "name: " ++ name
+    chroots ("div" @: ["id" @= "sp_contactInfo"]) $ do
+        phone <- text "Strong"
+        let n = "telephone: " ++ phone
         return n
+
+
+{-
+scrapeDetails :: Scraper String [String]
+scrapeDetails =  
+    chroots "h1" ("div" @: ["id" @= "sp_contactInfo"])
+-}
 
 
 scrapeLinks :: Scraper String [String]
 scrapeLinks =  
     chroots "a" $ do
         altText <- attr "href" anySelector
-        guard ("schools/computing/staff" `isInfixOf` altText)
+        guard (staffUrl `isInfixOf` altText)
         let url = "http://www.gla.ac.uk/" ++ altText
         return url
 
