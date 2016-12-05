@@ -14,15 +14,18 @@ main = do
     details <- sequence $ (fmap (mapM getDetails) links)
     let d2 =  map fromJust (fromJust details)
     let d3 = map (map tostring) d2
-    print (filter (not . null) d3)
+    let d4 = (filter (not . null) d3)
     --sequence_ details
+    print d4
     text <- execLaTeXT doc
     renderFile "test.tex" text
 
 
+flattenArray :: [[(String)]] -> [(String)]
+flattenArray [[(a)]] = [(a)]
+
 --extractDetails :: [[String]] -> [String]
 --extractDetails (x:xs) = scrapeURL x scrapeDetails : getDetails xs
-
 tostring :: (String, String) -> String
 tostring (name, phone) = "Name: " ++ name ++ " Phone: " ++ phone
 
