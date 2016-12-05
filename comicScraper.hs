@@ -7,12 +7,19 @@ import Control.Monad
 import Control.Applicative
 main :: IO()
 main = do
-    links <- getLinks mainUrl
-    details <- return (fmap (mapM getDetails) links)
-    sequence_ details
+    -- Scrapes the main url link and stores within links
+    links <- getLinks (mainUrl++staffUrl)
+    details <- sequence $ (fmap (mapM getDetails) links)
+    print details
+    --sequence_ details
+
+{-}    
+getDetails :: [String] -> [String]
+getDetails (x:xs) = scrapeURL x scrapeDetails : getDetails xd
+-}
 
 mainUrl :: String
-mainUrl = "http://www.gla.ac.uk/schools/computing/staff"
+mainUrl = "http://www.gla.ac.uk/"
 
 staffUrl :: String
 staffUrl = "schools/computing/staff"
@@ -22,18 +29,17 @@ getLinks :: String -> IO (Maybe [String])
 getLinks a = scrapeURL a scrapeLinks
 
 -- Function for scraping each individual staff link
-getDetails :: String -> IO (Maybe [String])
+getDetails :: String -> IO (Maybe [[String]])
 getDetails a = scrapeURL a scrapeDetails
 
 
-scrapeDetails :: Scraper String [String]
+scrapeDetails :: Scraper String [[String]]
 scrapeDetails =  
-    chroots ("div" @: ["id" @= "sp_contactInfo"]) $ do
-        phone <- text "Strong"
-        let n = "telephone: " ++ phone
-        return n
+    chroots ("div" @: ["id" @= "sp_contactInfo"]) getAttributes
+        
 
-
+getAttributes :: Scraper String [String]
+getAttributes = (innerHTMLs "p")
 {-
 scrapeDetails :: Scraper String [String]
 scrapeDetails =  
@@ -44,9 +50,9 @@ scrapeDetails =
 scrapeLinks :: Scraper String [String]
 scrapeLinks =  
     chroots "a" $ do
-        altText <- attr "href" anySelector
+        altText <- attr "href" anySelector -- altText is the staff name, gets the name if the url is after schools/comutin
         guard (staffUrl `isInfixOf` altText)
-        let url = "http://www.gla.ac.uk/" ++ altText
+        let url = mainUrl ++ altText
         return url
 
 
